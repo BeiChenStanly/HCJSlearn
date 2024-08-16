@@ -1,21 +1,46 @@
 <script setup>
-import { ref } from 'vue';
-let value = ref('')
-let todos = ref([{
-  isCompleted: false,
-  text: 'Learn Vue'
-}])
-function addTodo() {
-  todos.value.push({
-    isCompleted: false,
-    text: value.value
-  })
-  value.value = ''
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+
+let value = ref('');
+let todos = ref([]);
+
+// API URL
+const apiUrl = 'http://192.168.1.7:3000/todos';
+
+async function fetchTodos() {
+  try {
+    const response = await axios.get(apiUrl);
+    todos.value = response.data;
+  } catch (error) {
+    console.error('Error fetching todos:', error);
+  }
 }
-function deleteTodo(index) {
-  todos.value.splice(index, 1)
+
+async function addTodo() {
+  const newTodo = { isCompleted: false, text: value.value };
+  try {
+    await axios.post(apiUrl, newTodo);
+    fetchTodos();
+    value.value = '';
+  } catch (error) {
+    console.error('Error adding todo:', error);
+  }
 }
+
+async function deleteTodo(index) {
+  try {
+    await axios.delete(`${apiUrl}/${todos.value[index].id}`);
+    fetchTodos()
+  } catch (error) {
+    console.error('Error deleting todo:', error);
+  }
+}
+
+// Fetch todos on component mount
+onMounted(fetchTodos);
 </script>
+
 
 <template>
   <div class="todo-app">
